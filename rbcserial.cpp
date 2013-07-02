@@ -6,6 +6,14 @@ void sig_hup(int s) {
 	sig = 1;
 }
 
+/**
+ * Open serial port
+ * NO PARITY
+ * 8 BITS
+ * 1 STOP BIT
+ * NO FLOW CONTROL
+ */
+
 void RbcSerial::open() {
 	boost::system::error_code ec;
 
@@ -65,6 +73,10 @@ void RbcSerial::flush() {
 	}
 }
 
+/**
+ * Synchrone writing
+ */
+
 void RbcSerial::write(const unsigned char * data, size_t size) {
 	if(serial.get() != NULL && serial->is_open()) {
 		try {
@@ -76,7 +88,7 @@ void RbcSerial::write(const unsigned char * data, size_t size) {
 }
 
 /**
- * Asynchrone write
+ * Asynchrone writing
  */
 
 void RbcSerial::async_write(const unsigned char * data, size_t size) {
@@ -94,6 +106,8 @@ void RbcSerial::async_write(const unsigned char * data, size_t size) {
 	}
 }
 
+
+
 void RbcSerial::async_write_handler(const boost::system::error_code & e, size_t b) {
 	if(e) {
 		return;
@@ -101,6 +115,10 @@ void RbcSerial::async_write_handler(const boost::system::error_code & e, size_t 
 
 	serial->cancel();
 }
+
+/**
+ * Synchrone reading
+ */
 
 void RbcSerial::read(unsigned char * data, size_t size) {
 	if(serial.get() != NULL && serial->is_open()) {
@@ -114,6 +132,10 @@ void RbcSerial::read(unsigned char * data, size_t size) {
 		}
 	}
 }
+
+/**
+ * Asynchrone reading
+ */
 
 void RbcSerial::async_read(unsigned char * data, size_t size) {
 	if(serial.get() != NULL && serial->is_open()) {
@@ -136,11 +158,15 @@ void RbcSerial::async_read_handler(const boost::system::error_code & e, std::siz
 	}
 }
 
+/**
+ * Handy method for writing array of bytes
+ */
+
 void RbcSerial::print_bytes(unsigned char * data, size_t size, std::ostream & o) {
 	unsigned int i = 0;
 
 	while(i < size) {
-		o << std::hex << (unsigned int) data[i] << " ";
+		o << std::hex << (unsigned int) * (data + i) << " ";
 		++ i;
 	}
 
