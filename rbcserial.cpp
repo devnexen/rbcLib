@@ -1,11 +1,5 @@
 #include "rbcserial.hpp"
 
-static int sig = 0;
-
-void sig_hup(int s) {
-	sig = 1;
-}
-
 /**
  * Open serial port
  * NO PARITY
@@ -14,12 +8,16 @@ void sig_hup(int s) {
  * NO FLOW CONTROL
  */
 
+
+
+void signal_handler(const boost::system::error_code & e, int sig) {
+        if(!e) {
+                std::cerr << "Signal received " << sig << std::endl;
+        }
+}
+
 void RbcSerial::open() {
 	boost::system::error_code ec;
-
-	signal(SIGHUP, sig_hup);
-	signal(SIGUSR1, sig_hup);
-	signal(SIGKILL, sig_hup);
 
 	serial = boost::shared_ptr<boost::asio::serial_port>(new boost::asio::serial_port(io));
 
@@ -33,12 +31,16 @@ void RbcSerial::open() {
 			serial->set_option(opt_csize);
 			serial->set_option(opt_flow);
 			serial->set_option(opt_stop);
+				
+	                boost::asio::signal_set signals(io, SIGTERM, SIGINT);
+	                signals.async_wait(signal_handler);
+	                	
+	                boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
 		}
 	} catch(std::exception & e) {
 		std::cerr << "open Exception : " << e.what() << std::endl;
+		close();
 	}
-	
-	boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
 }
 
 RbcSerial::~RbcSerial() {
@@ -165,11 +167,13 @@ void RbcSerial::async_read_handler(const boost::system::error_code & e, std::siz
 void RbcSerial::print_bytes(unsigned char * data, size_t size, std::ostream & o) {
 	unsigned int i = 0;
 
+        o << std::showbase << std::internal << std::setfill('0');
+
 	while(i < size) {
 		o << std::hex << (unsigned int) * (data + i) << " ";
 		++ i;
 	}
 
-	o << std::endl;
+	o << std::dec << std::endl;
 }
 

@@ -1,7 +1,6 @@
 #ifndef RBC_SERIAL_H
 #define RBC_SERIAL_H
 #include <string>
-#include <sys/signal.h>
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
 #include <boost/bind.hpp>
