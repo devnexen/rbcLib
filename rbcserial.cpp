@@ -65,7 +65,11 @@ void RbcSerial::reset() {
 
 void RbcSerial::flush() {
 	if(serial.get() != NULL && serial->is_open()) {
+	        #if defined(WIN32)
+	        bool isflushed = ::PurgeComm(serial->native(), PURGE_RXABORT | PURGE_RXCLEAR);
+	        #else
 		bool isflushed =! ::tcflush(serial->native(), TCIFLUSH);
+		#endif
 
 		if(!isflushed) {
 			boost::system::error_code ec;
