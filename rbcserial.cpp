@@ -36,6 +36,9 @@ void RbcSerial::open() {
 	                signals.async_wait(signal_handler);
 	                	
 	                boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
+	                
+	                set_serial_number();
+	                set_firmware();
 		}
 	} catch(std::exception & e) {
 		std::cerr << "open Exception : " << e.what() << std::endl;
@@ -179,5 +182,47 @@ void RbcSerial::print_bytes(unsigned char * data, size_t size, std::ostream & o)
 	}
 
 	o << std::dec << std::endl;
+}
+
+/**
+ * We get the serial number (must be done before Direct Mode...)
+ */
+
+void RbcSerial::set_serial_number() {
+        unsigned char commandSerialNumber[16] = {
+                COMMON_HEADER
+                0x0C, 0x01, 0x00, 0x00,
+                0x00, 0x01, 0x01, 0x01
+        };
+        
+        unsigned char response[28];
+        
+        async_write(commandSerialNumber, 16);
+        read(response, 28);
+
+        memset(serial_number, 0, 14);
+        snprintf(serial_number, 13, "%s", response + 14);
+        serial_number[13] = 0;
+}
+
+/**
+ * We get the firmware (must be done before Direct Mode...)
+ */
+
+void RbcSerial::set_firmware() {
+        unsigned char commandFirmware[16] = {
+                COMMON_HEADER
+                0x12, 0x01, 0x00, 0x00,
+                0x00, 0x01, 0x01, 0x01
+        };
+        
+        unsigned char response[17];
+        
+        async_write(commandFirmware, 16);
+        read(response, 17);
+        
+        memset((char *) firmware, 0, 6);
+        snprintf((char *) firmware, 5, "%d.%d", response[14], response[15]);
+        firmware[5] = 0;
 }
 

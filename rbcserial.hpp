@@ -6,12 +6,16 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
-#define RBC_BUFFER_SIZE		16
+#define RBC_BUFFER_SIZE		32
+#define COMMON_HEADER           0xFF, 0xFF, 0xAA, 0x55, \
+                                0xAA, 0x55, 0x37, 0xBA, \
 
 class RbcSerial {
 	private:
 		std::string tty;
 		unsigned int brate;
+		char serial_number[14];
+		char firmware[6];
 		
 		boost::shared_ptr<boost::asio::serial_port> serial;
 		boost::asio::io_service io;
@@ -21,6 +25,9 @@ class RbcSerial {
 		boost::asio::serial_port_base::character_size opt_csize;
 		boost::asio::serial_port_base::flow_control opt_flow;
 		boost::asio::serial_port_base::stop_bits opt_stop;
+		
+		void set_serial_number();
+		void set_firmware();
 	public:
 		RbcSerial(const std::string _tty, unsigned int _brate, 
 			boost::asio::serial_port_base::parity _opt_parity = boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none),
@@ -45,6 +52,8 @@ class RbcSerial {
 		void async_read(unsigned char * data) { async_read(data, RBC_BUFFER_SIZE); }
 		void async_read_handler(const boost::system::error_code & e, std::size_t b);
 		void print_bytes(unsigned char * data, size_t size, std::ostream & o);
+		const char * sn() const { return (const char *) serial_number; }
+		const char * fw() const { return (const char *) firmware; }
 };
 
 #endif

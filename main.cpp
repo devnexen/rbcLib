@@ -19,6 +19,9 @@ int main(int argc, char ** argv) {
 	int speed = 115200;
 
 	RbcSerial r(tty, speed);
+	
+	std::cout << "Serial Number : " << r.sn() << std::endl;
+	std::cout << "Firmware version : " << r.fw() << std::endl;
 
 	void * plugin = dlopen(pluginpath.c_str(), RTLD_LAZY);
 
