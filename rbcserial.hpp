@@ -6,7 +6,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
-#define RBC_BUFFER_SIZE		32
+#define RBC_BUFFER_SIZE		128
 #define COMMON_HEADER           0xFF, 0xFF, 0xAA, 0x55, \
                                 0xAA, 0x55, 0x37, 0xBA, \
 
