@@ -1,5 +1,6 @@
 #include "rbcserial.hpp"
 #include "plugin.hpp"
+#include <termios.h>
 
 static bool warned = false;
 static unsigned char servosPos[16] = { 0x00 };
@@ -122,6 +123,13 @@ void plugServosChecking(RbcSerial & r, unsigned char servosPos[16], std::ostream
 
 void servosMovesChecking(RbcSerial & r, unsigned char servosPos[16], std::ostream & o) {
 	o << "SERVOS MOVE CHECKING" << std::endl;
+	struct termios old, cur;
+	tcgetattr(fileno(stdin), & old);
+	cur = old;
+	cur.c_lflag &= ~ICANON;
+	cur.c_lflag &= ~ECHO;
+	
+	tcsetattr(fileno(stdin), TCSANOW, & cur);
 
 	if(servosPosArrayCheck(servosPos)) {
 		if(!warned) {
@@ -135,6 +143,26 @@ void servosMovesChecking(RbcSerial & r, unsigned char servosPos[16], std::ostrea
 		currentPos = * servosPos;
 
 		while(1) {
+			fd_set set;
+			struct timeval tv;
+
+			tv.tv_sec = 10;
+			tv.tv_usec = 0;
+
+			FD_ZERO(& set);
+			FD_SET(fileno(stdin), & set);
+
+			int res = select(fileno(stdin) + 1, & set, 0, 0, & tv);
+
+			if(res) {
+				char c;
+				read(fileno(stdin), & c, 1);
+				
+				if(c == ' ') {
+					break;
+				}
+			}
+
 			ushort i = 0;
 			while(currentPos < 0x80) {
 				++ currentPos;
@@ -169,6 +197,8 @@ void servosMovesChecking(RbcSerial & r, unsigned char servosPos[16], std::ostrea
 				++ i;
 			}
 		}
+
+		tcsetattr(fileno(stdin), TCSANOW, & old);
 	} else {
 		o << "Servos not well checked !" << std::endl;	
 		return;
