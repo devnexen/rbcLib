@@ -115,9 +115,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 			while(currentPos < maxPos) {
 				++ currentPos;
 				unsigned char posB = (currentPos < 0x80 ? currentPos - 0x60 : 0x60);
-				unsigned char commandMove[70] = {
-					RBC_MOVE_CHECK_0(i, currentPos, posB)
-				};
+				RBC_MOVE_CHECK(ID, v, currentPos, posB)
 
 				unsigned char sresponse[34];
 
@@ -145,9 +143,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 			while(currentPos > minPos) {
 				-- currentPos;
 				unsigned char posB = currentPos - 0x60;
-				unsigned char commandMove[70] = {
-					RBC_MOVE_CHECK_0(i, currentPos, posB)
-				};
+				RBC_MOVE_CHECK(ID, v, currentPos, posB)
 
 				unsigned char sresponse[34];
 
