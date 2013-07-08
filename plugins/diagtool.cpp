@@ -91,7 +91,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 
 	tcsetattr(fileno(stdin), TCSANOW, & cur);
 
-	unsigned char currentPos, maxPos, minPos;
+	unsigned char currentPos, maxPos, minPos, ids = 0x00;
 	SERVO_CHECK_BEGIN
 		maxPos = currentPos = * (sresponse + 1);
 
@@ -99,10 +99,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 			++ maxPos;
 		}
 
-		minPos = maxPos - 0x06;
-		r.print_bytes(& currentPos, 1, o);
-		r.print_bytes(& maxPos, 1, o);
-		r.print_bytes(& minPos, 1, o);
+		minPos = maxPos - 0x20;
 
 		while(1) {
 			fd_set set;
@@ -115,7 +112,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 			while(currentPos < maxPos) {
 				++ currentPos;
 				unsigned char posB = (currentPos < 0x80 ? currentPos - 0x60 : 0x60);
-				RBC_MOVE_CHECK(ID, v, currentPos, posB)
+				RBC_MOVE_CHECK(ids, v, currentPos, posB)
 
 				unsigned char sresponse[34];
 
@@ -143,7 +140,7 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 			while(currentPos > minPos) {
 				-- currentPos;
 				unsigned char posB = currentPos - 0x60;
-				RBC_MOVE_CHECK(ID, v, currentPos, posB)
+				RBC_MOVE_CHECK(ids, v, currentPos, posB)
 
 				unsigned char sresponse[34];
 
@@ -152,6 +149,8 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 
 				++ v;
 			}
+
+			++ ids;
 		}
 	SERVO_CHECK_END
 
