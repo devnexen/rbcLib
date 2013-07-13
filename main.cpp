@@ -1,4 +1,7 @@
 #include "rbcserial.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <dlfcn.h>
 
 #define EXIT_CMD		127
@@ -6,13 +9,35 @@
 				dlclose(plugin); \
 				return -1;
 
+#if defined(_WIN32) || defined(_WIN64)
+#define LIB_EXTENSION	".dll"
+#elif defined(__unix__)
+#if defined(__APPLE__) || defined(__MACH__)
+#define LIB_EXTENSION	".dylib"
+#else
+#define LIB_EXTENSION	".so"
+#endif
+#endif
+
 typedef int (* menu_t)(void);
 typedef void (* start_t)(RbcSerial &, std::ostream &);
 typedef void (* stop_t)(RbcSerial &, std::ostream &);
 typedef void (* task_t)(RbcSerial &, int, int, char **, std::ostream &);
 
 void usage(void) {
-	std::cout << "./main <port> <pluginname> (argv1...argvn)" << std::endl;
+	std::cout << "./main <config> <pluginname> (argv1...argvn)" << std::endl;
+}
+
+void read_config(const std::string & config_file, std::string & tty, std::string & pluginsfolder) {
+	boost::property_tree::ptree p;
+	
+	try {
+		boost::property_tree::ini_parser::read_ini(config_file.c_str(), p);
+		tty = p.get<std::string>("TTY");
+		pluginsfolder = p.get<std::string>("PLUGINSFOLDER");
+	} catch(std::exception & ex) {
+		throw ex.what();
+	}
 }
 
 int main(int argc, char ** argv) {
@@ -21,12 +46,25 @@ int main(int argc, char ** argv) {
 		return -1;
 	}
 
-	const std::string tty = argv[1];
-	const std::string pluginpath = argv[2];
+	const std::string configfile = argv[1];
+	std::string tty, pluginsfolder;
+
+	try {
+		read_config(configfile, tty, pluginsfolder);
+	} catch(const char * msg) {
+		std::cerr << "Config ini file : " << msg << std::endl;
+		return -1;
+	}
+
+	std::string pluginpath = pluginsfolder;
+	pluginpath.append(boost::filesystem::path("/").native());
+	pluginpath.append(argv[2]);
+	pluginpath.append(LIB_EXTENSION);
 
 	int speed = 115200;
 	RbcSerial r(tty, speed);
 	
+	std::cout << "Tty : " << tty << std::endl;
 	std::cout << "Serial Number : " << r.sn() << std::endl;
 	std::cout << "Firmware version : " << r.fw() << std::endl;
 
@@ -61,6 +99,8 @@ int main(int argc, char ** argv) {
 	if(!stophandle) {
 		FAIL_PLUG("stop")
 	}
+
+	std::cout << "Plugin loaded : " << pluginpath << std::endl;
 
 	argc --;
 	argv ++;
