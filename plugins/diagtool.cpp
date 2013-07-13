@@ -1,6 +1,5 @@
 #include "rbcserial.hpp"
 #include "plugin.hpp"
-#include <termios.h>
 
 static bool warned = false;
 void plugServosChecking(RbcSerial &, std::ostream &);
@@ -83,76 +82,22 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 		sleep(2);
 	}
 
-	struct termios old, cur;
-	tcgetattr(fileno(stdin), & old);
-	cur = old;
-	cur.c_lflag &= ~ICANON;
-	cur.c_lflag &= ~ECHO;
-
-	tcsetattr(fileno(stdin), TCSANOW, & cur);
-
-	unsigned char currentPos, maxPos, minPos, ids = 0x00;
+	unsigned char currentPos, maxPos;
 	SERVO_CHECK_BEGIN
-		maxPos = currentPos = * (sresponse + 1);
+		currentPos = * (sresponse + 1);
+		maxPos = currentPos + 0x20;
 
-		while((maxPos % 0x20) != 0) {
-			++ maxPos;
+		while(++ currentPos < maxPos) {
+			RBC_SERVO_MOVE(ID, 3, currentPos)
+
+			r.async_write(commandServoPos, 4);
+			r.flush();
 		}
+	
+		RBC_SERVO_PASSIVE(ID)
+		r.async_write(commandServoPassive, 4);
+		r.flush();
 
-		minPos = maxPos - 0x20;
-
-		while(1) {
-			fd_set set;
-			struct timeval tv;
-
-			tv.tv_sec = 2;
-			tv.tv_usec = 0;
-
-			ushort v = 0;
-			while(currentPos < maxPos) {
-				++ currentPos;
-				unsigned char posB = (currentPos < 0x80 ? currentPos - 0x60 : 0x60);
-				RBC_MOVE_CHECK(ids, v, currentPos, posB)
-
-				unsigned char sresponse[34];
-
-				r.async_write(commandMove, 70);
-				r.read(sresponse, 34);				
-
-				++ v;
-			}
-
-			FD_ZERO(& set);
-			FD_SET(fileno(stdin), & set);
-
-			int res = select(fileno(stdin) + 1, & set, 0, 0, & tv);
-
-			if(res) {
-				char c;
-				read(fileno(stdin), & c, 1);
-
-				if(c == ' ') {
-					break;
-				}
-			}
-
-			v = 0;
-			while(currentPos > minPos) {
-				-- currentPos;
-				unsigned char posB = currentPos - 0x60;
-				RBC_MOVE_CHECK(ids, v, currentPos, posB)
-
-				unsigned char sresponse[34];
-
-				r.async_write(commandMove, 70);
-				r.read(sresponse, 34);				
-
-				++ v;
-			}
-
-			++ ids;
-		}
+		sleep(1);
 	SERVO_CHECK_END
-
-	tcsetattr(fileno(stdin), TCSANOW, & old);
 }
