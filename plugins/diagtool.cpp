@@ -4,12 +4,14 @@
 static bool warned = false;
 void plugServosChecking(RbcSerial &, std::ostream &);
 void servosMovesChecking(RbcSerial &, std::ostream &);
+void internalSoundsChecking(RbcSerial &, std::ostream &);
 
 extern "C" int menu(void) {
 	MENU_VARS
 
 	printf("1/ Plug servos checking\n");
 	printf("2/ Servos moves checking\n");
+	printf("3/ Play sounds\n");
 	
    	GET_MENU_CHOICE	
 }
@@ -23,6 +25,9 @@ extern "C" void task(RbcSerial & r, int c, int argc, char ** argv, std::ostream 
 			break;
 		case 2:
 			checking = servosMovesChecking;
+			break;
+		case 3:
+			checking = internalSoundsChecking;
 			break;
 		default:
 			std::cerr << "Bad choice" << std::endl;
@@ -39,9 +44,10 @@ extern "C" void start(RbcSerial & r, std::ostream & o) {
 		0x00, 0x01, 0x01, 0x01
 	};
 
-	o << "Robobuilder Direct Mode on" << std::endl;
 	r.async_write(commandDirectMode);
+	r.flush();
 	sleep(2);
+	o << "Robobuilder Direct Mode on" << std::endl;
 }
 
 extern "C" void stop(RbcSerial & r, std::ostream & o) {
@@ -100,4 +106,18 @@ void servosMovesChecking(RbcSerial & r, std::ostream & o) {
 
 		sleep(1);
 	SERVO_CHECK_END
+}
+
+void internalSoundsChecking(RbcSerial & r, std::ostream & o) {
+	o << "INTERNAL SOUNDS CHECKING" << std::endl;
+
+	unsigned char commandSounds[] = {
+		COMMON_HEADER
+		0x15, 0x01, 0x00, 0x00,
+		0x00, 0x01, 0x01, 0x01
+	};
+
+	r.async_write(commandSounds);
+	r.print_bytes(commandSounds, 16, o);
+	r.flush();
 }
