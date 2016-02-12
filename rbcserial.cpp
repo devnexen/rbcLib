@@ -57,13 +57,13 @@ void RbcSerial::open() {
 			serial->set_option(opt_flow);
 			serial->set_option(opt_stop);
 				
-	                boost::asio::signal_set signals(io, SIGTERM, SIGINT);
-	                signals.async_wait(signal_handler);
-	                	
-	                boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
-	                
-	                set_serial_number();
-	                set_firmware();
+            boost::asio::signal_set signals(io, SIGTERM, SIGINT);
+            signals.async_wait(signal_handler);
+
+            boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
+
+            set_serial_number();
+            set_firmware();
 		}
 	} catch(std::exception & e) {
 		std::cerr << "open Exception : " << e.what() << std::endl;
@@ -93,11 +93,11 @@ void RbcSerial::reset() {
 
 void RbcSerial::flush() {
 	if(serial.get() != NULL && serial->is_open()) {
-	        #if defined(WIN32)
-	        bool isflushed = ::PurgeComm(serial->native(), PURGE_RXABORT | PURGE_RXCLEAR);
-	        #else
-		bool isflushed =! ::tcflush(serial->native(), TCIFLUSH);
-		#endif
+#if defined(WIN32)
+        bool isflushed = ::PurgeComm(serial->native(), PURGE_RXABORT | PURGE_RXCLEAR);
+#else
+        bool isflushed =! ::tcflush(serial->native(), TCIFLUSH);
+#endif
 
 		if(!isflushed) {
 			boost::system::error_code ec;
