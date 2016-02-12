@@ -13,5 +13,4 @@ build/bin/rbctool <tty> plugins/<pluginname>.<so|dylib>
 * On Linux might be build/bin/rbctool /dev/ttyUSB0 plugins/diagtool.so
 * On FreeBSD might be build/bin/rbctool /dev/ttyU0 plugins/diagtool.so
 
-
 It will set it in Direct Mode Control and will check every servo (in HUNO configuration)
