@@ -5,6 +5,6 @@ compiler:
 
 before_install:
 - sudo apt-get -qq update
-- sudo apt-get install libboost1.58-all-dev
+- sudo apt-get install libboost-all-dev
 
 script: cmake -DCMAKE_C_FLAGS="-Wall" && make

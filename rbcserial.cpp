@@ -94,9 +94,9 @@ void RbcSerial::reset() {
 void RbcSerial::flush() {
 	if(serial.get() != NULL && serial->is_open()) {
 #if defined(WIN32)
-        bool isflushed = ::PurgeComm(serial->native(), PURGE_RXABORT | PURGE_RXCLEAR);
+        bool isflushed = ::PurgeComm(serial->native_handle(), PURGE_RXABORT | PURGE_RXCLEAR);
 #else
-        bool isflushed =! ::tcflush(serial->native(), TCIFLUSH);
+        bool isflushed =! ::tcflush(serial->native_handle(), TCIFLUSH);
 #endif
 
 		if(!isflushed) {
