@@ -60,11 +60,11 @@ SOFTWARE.
 #define SERVO_CHECK_END	 }
 	
 #define RBC_SERVO_MOVE(ID, speed, pos)	unsigned char commandServoPos[4] = { \
-						0xFF, (speed << 5 | ID), pos, ((speed << 5 | ID) ^ pos) & 0x7F \
+						0xFF, (unsigned char)(speed << 5 | ID), pos, (unsigned char )(((speed << 5 | ID) ^ pos) & 0x7F) \
 					};
 
 #define RBC_SERVO_PASSIVE(ID)		unsigned char commandServoPassive[4] = { \
-						0xFF, (0xC0 | ID), 0x10, ((0xC0 | ID) ^ 0x10) & 0x7F \
+						0xFF, (unsigned char)(0xC0 | ID), 0x10, (unsigned char)(((0xC0 | ID) ^ 0x10) & 0x7F) \
 					};
 
 class RbcSerial {
