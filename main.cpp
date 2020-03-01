@@ -36,18 +36,16 @@ SOFTWARE.
 
 #if defined(_WIN32) || defined(_WIN64)
 #define LIB_EXTENSION	".dll"
-#elif defined(__unix__)
-#if defined(__APPLE__) || defined(__MACH__)
+#elif defined(__APPLE__) || defined(__MACH__)
 #define LIB_EXTENSION	".dylib"
 #else
 #define LIB_EXTENSION	".so"
-#endif
 #endif
 
 typedef int (* menu_t)(void);
 typedef void (* start_t)(RbcSerial &, std::ostream &);
 typedef void (* stop_t)(RbcSerial &, std::ostream &);
-typedef void (* task_t)(RbcSerial &, int, int, char **, std::ostream &);
+typedef void (* rbc_task_t)(RbcSerial &, int, int, char **, std::ostream &);
 
 void usage(void) {
 	std::cout << "./main <config> <pluginname> (argv1...argvn)" << std::endl;
@@ -107,7 +105,7 @@ int main(int argc, char ** argv) {
 		FAIL_PLUG("menu")
 	}
 
-	task_t taskhandle = (task_t) dlsym(plugin, "task");
+	rbc_task_t taskhandle = (rbc_task_t) dlsym(plugin, "task");
 
 	if(!taskhandle) {
 		FAIL_PLUG("task")

@@ -57,13 +57,13 @@ void RbcSerial::open() {
 			serial->set_option(opt_flow);
 			serial->set_option(opt_stop);
 				
-            boost::asio::signal_set signals(io, SIGTERM, SIGINT);
-            signals.async_wait(signal_handler);
+			boost::asio::signal_set signals(io, SIGTERM, SIGINT);
+			signals.async_wait(signal_handler);
 
-            boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
+			boost::thread t(boost::bind(& boost::asio::io_service::run, & io));
 
-            set_serial_number();
-            set_firmware();
+			set_serial_number();
+			set_firmware();
 		}
 	} catch(std::exception & e) {
 		std::cerr << "open Exception : " << e.what() << std::endl;
@@ -225,9 +225,8 @@ void RbcSerial::set_serial_number() {
         async_write(commandSerialNumber, 16);
         read(response, 28);
 
-        memset(serial_number, 0, 14);
-        snprintf(serial_number, 13, "%s", response + 14);
-        serial_number[13] = 0;
+        memset(serial_number, 0, sizeof(serial_number));
+        snprintf(serial_number, sizeof(serial_number), "%s", response + 14);
 }
 
 /**
@@ -246,8 +245,7 @@ void RbcSerial::set_firmware() {
         async_write(commandFirmware, 16);
         read(response, 17);
         
-        memset((char *) firmware, 0, 6);
-        snprintf((char *) firmware, 5, "%d.%d", response[14], response[15]);
-        firmware[5] = 0;
+        memset(firmware, 0, sizeof(firmware));
+        snprintf((char *) firmware, sizeof(firmware), "%d.%d", response[14], response[15]);
 }
 
